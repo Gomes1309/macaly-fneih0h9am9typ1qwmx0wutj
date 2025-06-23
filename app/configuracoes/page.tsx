@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { MigrationHelper } from '@/components/migration-helper'
 import { ProductionHelper } from '@/components/production-helper'
+import { PostgresSetupGuide } from '@/components/postgres-setup-guide'
 import { 
   Settings, 
   Building2, 
@@ -1043,6 +1044,7 @@ export default function ConfiguracoesPage() {
             </TabsContent>
 
             <TabsContent value="database" className="space-y-6">
+              <PostgresSetupGuide />
               <Card className="ag-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

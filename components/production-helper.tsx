@@ -69,15 +69,15 @@ export function ProductionHelper() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <Database className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">
-                PostgreSQL Configurado na Vercel
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <span className="text-sm font-medium text-red-800">
+                PostgreSQL Não Configurado
               </span>
             </div>
-            <p className="text-xs text-blue-700 mb-3">
-              O banco de dados foi configurado no Vercel Dashboard. Agora você precisa fazer o deploy para ativar.
+            <p className="text-xs text-red-700 mb-3">
+              Você precisa configurar o PostgreSQL no Vercel Dashboard antes do deploy.
             </p>
             
             <div className="flex gap-2">
@@ -150,14 +150,21 @@ export function ProductionHelper() {
 
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800 mb-3">
-              <strong>Opção 2:</strong> Deploy direto pela Vercel:
+              <strong>ANTES DO DEPLOY:</strong> Configure o PostgreSQL no Vercel:
             </p>
+            <div className="steps space-y-2 text-xs text-yellow-700 mb-3">
+              <p>1. Vá para <strong>Vercel Dashboard → Seu Projeto</strong></p>
+              <p>2. Clique na aba <strong>"Storage"</strong></p>
+              <p>3. Clique em <strong>"Create Database"</strong></p>
+              <p>4. Selecione <strong>"Postgres"</strong></p>
+              <p>5. Configure e conecte ao projeto</p>
+            </div>
             <Button 
               onClick={() => window.open('https://vercel.com/dashboard', '_blank')}
               className="bg-black hover:bg-gray-800"
             >
-              <Rocket className="h-4 w-4 mr-2" />
-              Fazer Deploy na Vercel
+              <Database className="h-4 w-4 mr-2" />
+              Configurar PostgreSQL
             </Button>
           </div>
         </CardContent>
