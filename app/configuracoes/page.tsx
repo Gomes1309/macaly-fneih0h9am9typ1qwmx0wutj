@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { MigrationHelper } from '@/components/migration-helper'
+import { ProductionHelper } from '@/components/production-helper'
 import { 
   Settings, 
   Building2, 
@@ -27,6 +28,7 @@ import {
   Shield,
   Users,
   Database,
+  Rocket,
   Smartphone,
   Globe,
   CreditCard,
