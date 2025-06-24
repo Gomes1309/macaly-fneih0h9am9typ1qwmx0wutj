@@ -49,6 +49,18 @@ const clients: Client[] = [
     cnpj: "55.666.777/0001-88",
     status: "inativo"
   },
+  {
+    value: "maria-mei",
+    label: "Maria da Silva",
+    cnpj: "12.345.678/0001-91",
+    status: "ativo"
+  },
+  {
+    value: "fazenda-saojose",
+    label: "Fazenda São José Ltda",
+    cnpj: "98.765.432/0001-10",
+    status: "ativo"
+  },
 ]
 
 interface ClientSelectorProps {

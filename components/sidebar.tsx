@@ -30,6 +30,11 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const navigation = [
   {
+    title: 'Clientes',
+    href: '/clientes',
+    icon: Users,
+  },
+  {
     title: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
@@ -75,6 +80,11 @@ const navigation = [
     icon: Receipt,
   },
 
+  {
+    title: 'Usuários',
+    href: '/usuarios',
+    icon: Users,
+  },
   {
     title: 'Área do Cliente',
     href: '/cliente',

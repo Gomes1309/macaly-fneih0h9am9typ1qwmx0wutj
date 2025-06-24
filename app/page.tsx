@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/sidebar'
 import { Header } from '@/components/header'
 import { DashboardStats } from '@/components/dashboard-stats'
@@ -33,8 +34,22 @@ import {
 
 export default function HomePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
 
   console.log('Home page rendered, sidebar collapsed:', sidebarCollapsed)
+
+  // Verificar autenticação
+  useEffect(() => {
+    const user = localStorage.getItem('auth_user')
+    if (!user) {
+      console.log('User not authenticated, redirecting to auth')
+      router.push('/auth')
+    } else {
+      console.log('User authenticated:', JSON.parse(user))
+      setIsAuthenticated(true)
+    }
+  }, [])
 
   const handleQuickAction = (action: string) => {
     console.log('Quick action clicked:', action)
@@ -113,6 +128,18 @@ export default function HomePage() {
       bgColor: 'bg-green-50 hover:bg-green-100'
     }
   ]
+
+  // Mostrar loading enquanto verifica autenticação
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Verificando acesso...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-background">
