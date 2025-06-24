@@ -42,16 +42,12 @@ export interface Configuracao {
 }
 
 export async function initializeTables() {
-  console.log('🔄 Inicializando tabelas do banco de dados...')
+  console.log('🔄 Inicializando tabelas do banco de dados Neon...')
   
   // Verificar se temos conexão PostgreSQL
   if (!hasPostgresConnection()) {
-    console.log('⚠️ PostgreSQL não configurado - usando localStorage como fallback')
-    return {
-      success: false,
-      message: 'PostgreSQL não configurado. Configure as variáveis de ambiente no Vercel.',
-      fallback: 'localStorage'
-    }
+    console.error('❌ ERRO: PostgreSQL não configurado!')
+    throw new Error('NEON_NOT_CONFIGURED: Configure a variável POSTGRES_URL no Vercel para usar o banco Neon.')
   }
   
   try {
@@ -112,22 +108,20 @@ export async function initializeTables() {
       )
     `
 
-    console.log('✅ Tabelas inicializadas com sucesso!')
-    return { success: true }
+    console.log('✅ Banco Neon inicializado com sucesso!')
+    return { success: true, provider: 'neon' }
   } catch (error) {
-    console.error('❌ Erro ao inicializar tabelas:', error)
-    return {
-      success: false,
-      message: `Erro ao inicializar PostgreSQL: ${(error as Error).message}`,
-      fallback: 'localStorage'
-    }
+    console.error('❌ Erro ao conectar com Neon:', error)
+    throw new Error(`NEON_CONNECTION_ERROR: ${(error as Error).message}`)
   }
 }
 
 // Funções para Clientes
 export async function createCliente(cliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) {
+  console.log('📝 Criando cliente no Neon:', cliente.nome)
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`
@@ -135,21 +129,28 @@ export async function createCliente(cliente: Omit<Cliente, 'id' | 'created_at' |
     VALUES (${cliente.nome}, ${cliente.email}, ${cliente.telefone}, ${cliente.tipo}, ${cliente.cpf_cnpj}, ${cliente.status}, ${cliente.whatsapp}, ${cliente.endereco})
     RETURNING *
   `
+  
+  console.log('✅ Cliente criado no Neon:', result.rows[0])
   return result.rows[0] as Cliente
 }
 
 export async function getClientes(): Promise<Cliente[]> {
+  console.log('🔍 Buscando clientes no Neon...')
+  
   if (!hasPostgresConnection()) {
-    return []
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`SELECT * FROM clientes ORDER BY created_at DESC`
+  console.log(`✅ ${result.rows.length} clientes encontrados no Neon`)
   return result.rows as Cliente[]
 }
 
 export async function updateCliente(id: string, data: Partial<Cliente>) {
+  console.log('📝 Atualizando cliente no Neon:', id)
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`
@@ -160,21 +161,28 @@ export async function updateCliente(id: string, data: Partial<Cliente>) {
     WHERE id = ${id}
     RETURNING *
   `
+  
+  console.log('✅ Cliente atualizado no Neon:', result.rows[0])
   return result.rows[0] as Cliente
 }
 
 export async function deleteCliente(id: string) {
+  console.log('🗑️ Deletando cliente no Neon:', id)
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   await sql`DELETE FROM clientes WHERE id = ${id}`
+  console.log('✅ Cliente deletado do Neon')
 }
 
 // Funções para Usuários
 export async function createUsuario(usuario: Omit<Usuario, 'id' | 'created_at' | 'updated_at'>) {
+  console.log('👤 Criando usuário no Neon:', usuario.email)
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`
@@ -182,40 +190,55 @@ export async function createUsuario(usuario: Omit<Usuario, 'id' | 'created_at' |
     VALUES (${usuario.nome}, ${usuario.email}, ${usuario.senha}, ${usuario.tipo}, ${usuario.status}, ${JSON.stringify(usuario.permissoes)})
     RETURNING *
   `
+  
+  console.log('✅ Usuário criado no Neon:', result.rows[0])
   return result.rows[0] as Usuario
 }
 
 export async function getUsuarios(): Promise<Usuario[]> {
+  console.log('👥 Buscando usuários no Neon...')
+  
   if (!hasPostgresConnection()) {
-    return []
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`SELECT * FROM usuarios ORDER BY created_at DESC`
+  console.log(`✅ ${result.rows.length} usuários encontrados no Neon`)
   return result.rows as Usuario[]
 }
 
 export async function getUserByEmail(email: string): Promise<Usuario | null> {
+  console.log('🔍 Buscando usuário por email no Neon:', email)
+  
   if (!hasPostgresConnection()) {
-    return null
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`SELECT * FROM usuarios WHERE email = ${email} LIMIT 1`
-  return result.rows[0] as Usuario || null
+  const user = result.rows[0] as Usuario || null
+  
+  console.log(user ? '✅ Usuário encontrado no Neon' : '❌ Usuário não encontrado no Neon')
+  return user
 }
 
 // Funções para Configurações
 export async function getConfiguracoes(): Promise<Configuracao[]> {
+  console.log('⚙️ Buscando configurações no Neon...')
+  
   if (!hasPostgresConnection()) {
-    return []
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`SELECT * FROM configuracoes ORDER BY chave`
+  console.log(`✅ ${result.rows.length} configurações encontradas no Neon`)
   return result.rows as Configuracao[]
 }
 
 export async function updateConfiguracao(chave: string, valor: string, tipo: string = 'string') {
+  console.log('💾 Salvando configuração no Neon:', chave)
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon primeiro')
   }
   
   const result = await sql`
@@ -225,13 +248,18 @@ export async function updateConfiguracao(chave: string, valor: string, tipo: str
     DO UPDATE SET valor = ${valor}, tipo = ${tipo}, updated_at = NOW()
     RETURNING *
   `
+  
+  console.log('✅ Configuração salva no Neon:', result.rows[0])
   return result.rows[0] as Configuracao
 }
 
 // Funções para Logs
 export async function createLog(usuario_id: string | null, acao: string, detalhes: any = {}, ip?: string) {
+  console.log('📋 Criando log no Neon:', acao)
+  
   if (!hasPostgresConnection()) {
-    return // Silent fail para logs
+    console.warn('⚠️ Neon não configurado - log perdido:', acao)
+    return
   }
   
   try {
@@ -239,19 +267,17 @@ export async function createLog(usuario_id: string | null, acao: string, detalhe
       INSERT INTO logs (usuario_id, acao, detalhes, ip)
       VALUES (${usuario_id}, ${acao}, ${JSON.stringify(detalhes)}, ${ip})
     `
+    console.log('✅ Log salvo no Neon')
   } catch (error) {
-    console.error('Erro ao criar log:', error)
+    console.error('❌ Erro ao salvar log no Neon:', error)
   }
 }
 
 export async function getStats() {
+  console.log('📊 Buscando estatísticas no Neon...')
+  
   if (!hasPostgresConnection()) {
-    return {
-      clientes: 0,
-      usuarios: 0,
-      configuracoes: 0,
-      logs: 0
-    }
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon para visualizar estatísticas')
   }
 
   try {
@@ -262,27 +288,27 @@ export async function getStats() {
       sql`SELECT COUNT(*) as count FROM logs`
     ])
 
-    return {
+    const stats = {
       clientes: parseInt(clientesResult.rows[0].count) || 0,
       usuarios: parseInt(usuariosResult.rows[0].count) || 0,
       configuracoes: parseInt(configuracoesResult.rows[0].count) || 0,
       logs: parseInt(logsResult.rows[0].count) || 0
     }
+    
+    console.log('✅ Estatísticas do Neon:', stats)
+    return stats
   } catch (error) {
-    console.error('Erro ao buscar stats:', error)
-    return {
-      clientes: 0,
-      usuarios: 0,
-      configuracoes: 0,
-      logs: 0
-    }
+    console.error('❌ Erro ao buscar estatísticas no Neon:', error)
+    throw error
   }
 }
 
 // Função para migração de dados
 export async function migrateData(data: { clientes: any[], usuarios: any[], configuracoes: any }) {
+  console.log('🚀 Iniciando migração para o Neon...')
+  
   if (!hasPostgresConnection()) {
-    throw new Error('PostgreSQL não configurado para migração')
+    throw new Error('NEON_NOT_CONFIGURED: Configure o banco Neon antes de migrar dados')
   }
 
   const results = {
@@ -294,7 +320,8 @@ export async function migrateData(data: { clientes: any[], usuarios: any[], conf
 
   try {
     // Migrar clientes
-    for (const cliente of data.clientes) {
+    console.log(`📋 Migrando ${data.clientes?.length || 0} clientes para o Neon...`)
+    for (const cliente of data.clientes || []) {
       try {
         await sql`
           INSERT INTO clientes (nome, email, telefone, tipo, cpf_cnpj, status, whatsapp, endereco)
@@ -310,7 +337,8 @@ export async function migrateData(data: { clientes: any[], usuarios: any[], conf
     }
 
     // Migrar usuários
-    for (const usuario of data.usuarios) {
+    console.log(`👥 Migrando ${data.usuarios?.length || 0} usuários para o Neon...`)
+    for (const usuario of data.usuarios || []) {
       try {
         await sql`
           INSERT INTO usuarios (nome, email, senha, tipo, status, permissoes)
@@ -326,6 +354,7 @@ export async function migrateData(data: { clientes: any[], usuarios: any[], conf
     }
 
     // Migrar configurações
+    console.log(`⚙️ Migrando configurações para o Neon...`)
     if (data.configuracoes && typeof data.configuracoes === 'object') {
       for (const [chave, valor] of Object.entries(data.configuracoes)) {
         try {
@@ -341,11 +370,36 @@ export async function migrateData(data: { clientes: any[], usuarios: any[], conf
       }
     }
 
-    console.log('✅ Migração concluída:', results)
+    console.log('✅ Migração para Neon concluída:', results)
     return results
 
   } catch (error) {
-    console.error('❌ Erro na migração:', error)
+    console.error('❌ Erro na migração para Neon:', error)
+    throw error
+  }
+}
+
+// Função para testar conexão
+export async function testConnection() {
+  console.log('🔍 Testando conexão com Neon...')
+  
+  if (!hasPostgresConnection()) {
+    throw new Error('NEON_NOT_CONFIGURED: Variável POSTGRES_URL não encontrada')
+  }
+  
+  try {
+    const result = await sql`SELECT NOW() as timestamp, version() as version`
+    const info = result.rows[0]
+    
+    console.log('✅ Conexão com Neon estabelecida:', info)
+    return {
+      success: true,
+      timestamp: info.timestamp,
+      version: info.version,
+      provider: 'neon'
+    }
+  } catch (error) {
+    console.error('❌ Falha na conexão com Neon:', error)
     throw error
   }
 }

@@ -1,29 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
-import { initializeTables, getConfiguracoes, saveConfiguracao, logActivity } from '@/lib/database'
+import { getConfiguracoes, updateConfiguracao, createLog } from '@/lib/database'
 
 // GET - Buscar configurações
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    await initializeTables()
+    console.log('⚙️ Buscando configurações...')
+    const configuracoes = await getConfiguracoes()
     
-    const { searchParams } = new URL(request.url)
-    const categoria = searchParams.get('categoria')
-    
-    console.log('⚙️ Buscando configurações:', categoria || 'todas')
-    
-    const configs = await getConfiguracoes(categoria || undefined)
+    // Converter array para objeto
+    const configObj = configuracoes.reduce((acc, config) => {
+      try {
+        acc[config.chave] = config.tipo === 'json' ? JSON.parse(config.valor) : config.valor
+      } catch (error) {
+        acc[config.chave] = config.valor
+      }
+      return acc
+    }, {} as Record<string, any>)
+
+    console.log(`✅ ${configuracoes.length} configurações encontradas`)
     
     return NextResponse.json({
       success: true,
-      data: configs
+      configuracoes: configObj
     })
 
   } catch (error) {
     console.error('❌ Erro ao buscar configurações:', error)
     return NextResponse.json({ 
       success: false, 
-      message: 'Erro ao buscar configurações' 
+      message: 'Erro ao buscar configurações: ' + (error as Error).message 
     }, { status: 500 })
   }
 }
@@ -31,99 +36,68 @@ export async function GET(request: NextRequest) {
 // POST - Salvar configurações
 export async function POST(request: NextRequest) {
   try {
-    const configuracoes = await request.json()
-    console.log('💾 Salvando configurações:', Object.keys(configuracoes))
+    const body = await request.json()
+    console.log('💾 Salvando configurações:', Object.keys(body))
 
-    const userId = request.headers.get('x-user-id')
-    const savedConfigs = []
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown'
+
+    const results = []
 
     // Salvar cada configuração
-    for (const [categoria, configs] of Object.entries(configuracoes as Record<string, any>)) {
-      if (typeof configs === 'object' && configs !== null) {
-        for (const [chave, valor] of Object.entries(configs)) {
-          const chaveCompleta = `${categoria}.${chave}`
-          
-          try {
-            await saveConfiguracao(chaveCompleta, valor, typeof valor, categoria)
-            savedConfigs.push(chaveCompleta)
-            
-            // Log da atividade
-            if (userId) {
-              await logActivity(
-                userId,
-                'UPDATE',
-                'configuracoes',
-                chaveCompleta,
-                null,
-                { chave: chaveCompleta, valor },
-                request.ip,
-                request.headers.get('user-agent')
-              )
-            }
-            
-          } catch (error) {
-            console.error(`Erro ao salvar ${chaveCompleta}:`, error)
-          }
-        }
+    for (const [chave, valor] of Object.entries(body)) {
+      try {
+        const valorString = typeof valor === 'string' ? valor : JSON.stringify(valor)
+        const tipo = typeof valor === 'string' ? 'string' : 'json'
+        
+        const result = await updateConfiguracao(chave, valorString, tipo)
+        results.push(result)
+        
+        console.log(`✅ Configuração salva: ${chave}`)
+      } catch (error) {
+        console.error(`❌ Erro ao salvar ${chave}:`, error)
+        throw error
       }
     }
 
+    // Log da atividade
+    await createLog(
+      null,
+      'CONFIGURACOES_UPDATED',
+      {
+        keys: Object.keys(body),
+        count: results.length
+      },
+      ip
+    )
+
+    console.log(`✅ ${results.length} configurações salvas com sucesso`)
+    
     return NextResponse.json({
       success: true,
-      message: `${savedConfigs.length} configurações salvas com sucesso!`,
-      saved: savedConfigs
+      message: `${results.length} configurações salvas com sucesso!`,
+      saved: results.length
     })
 
   } catch (error) {
     console.error('❌ Erro ao salvar configurações:', error)
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Erro ao salvar configurações' 
-    }, { status: 500 })
-  }
-}
-
-// PUT - Atualizar configuração específica
-export async function PUT(request: NextRequest) {
-  try {
-    const { chave, valor, categoria = 'sistema' } = await request.json()
     
-    if (!chave) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Chave da configuração é obrigatória' 
-      }, { status: 400 })
-    }
-
-    console.log('🔧 Atualizando configuração:', chave)
-
-    await saveConfiguracao(chave, valor, typeof valor, categoria)
-
-    // Log da atividade
-    const userId = request.headers.get('x-user-id')
-    if (userId) {
-      await logActivity(
-        userId,
-        'UPDATE',
-        'configuracoes',
-        chave,
-        null,
-        { chave, valor },
-        request.ip,
-        request.headers.get('user-agent')
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Configuração atualizada com sucesso!'
-    })
-
-  } catch (error) {
-    console.error('❌ Erro ao atualizar configuração:', error)
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown'
+    
+    // Log do erro
+    await createLog(
+      null,
+      'CONFIGURACOES_ERROR',
+      {
+        error: (error as Error).message
+      },
+      ip
+    )
+    
     return NextResponse.json({ 
       success: false, 
-      message: 'Erro ao atualizar configuração' 
+      message: 'Erro ao salvar configurações: ' + (error as Error).message 
     }, { status: 500 })
   }
 }

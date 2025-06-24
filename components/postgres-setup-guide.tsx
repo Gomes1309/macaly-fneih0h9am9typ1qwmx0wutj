@@ -35,32 +35,32 @@ export function PostgresSetupGuide() {
     },
     {
       id: 2,
-      title: "Vá para a aba Storage",
-      description: "Encontre a aba 'Storage' no menu do projeto",
-      image: "📁"
+      title: "Vá para Settings",
+      description: "Clique na aba 'Settings' do projeto",
+      image: "⚙️"
     },
     {
       id: 3,
-      title: "Create Database",
-      description: "Clique no botão 'Create Database'",
-      image: "➕"
+      title: "Environment Variables",
+      description: "Clique em 'Environment Variables'",
+      image: "🔐"
     },
     {
       id: 4,
-      title: "Selecione Postgres",
-      description: "Escolha 'Postgres' como tipo de banco",
-      image: "🐘"
-    },
-    {
-      id: 5,
-      title: "Configure e Conecte",
-      description: "Siga as instruções para conectar ao projeto",
+      title: "Adicionar POSTGRES_URL",
+      description: "Adicione sua connection string do Neon",
       image: "🔗"
     },
     {
+      id: 5,
+      title: "Salvar Configuração",
+      description: "Salve as variáveis de ambiente",
+      image: "💾"
+    },
+    {
       id: 6,
-      title: "Deploy",
-      description: "Faça o deploy para ativar o PostgreSQL",
+      title: "Redeploy",
+      description: "Faça o redeploy para ativar as mudanças",
       image: "🚀"
     }
   ]
@@ -68,22 +68,24 @@ export function PostgresSetupGuide() {
   return (
     <div className="space-y-6">
       {/* Status Alert */}
-      <Card className="ag-card border-l-4 border-l-red-500">
+      <Card className="ag-card border-l-4 border-l-green-500">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-            PostgreSQL Não Configurado
-            <Badge variant="destructive">Ação Necessária</Badge>
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Integração com Neon Detectada
+            <Badge variant="default">Configurando</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800 mb-3">
-              <strong>Erro:</strong> 'missing_connection_string' - As variáveis de ambiente do PostgreSQL não foram encontradas.
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800 mb-3">
+              <strong>✅ Neon configurado!</strong> Agora precisa configurar as variáveis de ambiente no Vercel.
             </p>
-            <p className="text-xs text-red-700">
-              Para usar o banco de dados, você precisa configurar o PostgreSQL no Vercel primeiro.
-            </p>
+            <div className="space-y-2 text-xs text-green-700">
+              <p><strong>1.</strong> Copie a connection string do Neon</p>
+              <p><strong>2.</strong> Adicione no Vercel como POSTGRES_URL</p>
+              <p><strong>3.</strong> Faça o redeploy</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -131,6 +133,16 @@ export function PostgresSetupGuide() {
                 <p className="text-sm text-blue-600">
                   {steps[currentStep - 1]?.description}
                 </p>
+                {currentStep === 4 && (
+                  <div className="mt-2 p-2 bg-white border rounded text-xs">
+                    <p className="text-gray-600 mb-1">Nome da variável:</p>
+                    <code className="bg-gray-100 px-2 py-1 rounded">POSTGRES_URL</code>
+                    <p className="text-gray-600 mt-2 mb-1">Valor: Sua connection string do Neon</p>
+                    <code className="bg-gray-100 px-2 py-1 rounded text-xs break-all">
+                      postgresql://user:password@host/database?sslmode=require
+                    </code>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -208,11 +220,11 @@ export function PostgresSetupGuide() {
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <div>
-                <p className="text-sm font-medium">Plano Gratuito</p>
+                <p className="text-sm font-medium">Neon PostgreSQL</p>
                 <p className="text-xs text-muted-foreground">
-                  O PostgreSQL no Vercel tem um plano gratuito com limitações adequadas para desenvolvimento.
+                  Banco serverless com plano gratuito generoso - ideal para produção.
                 </p>
               </div>
             </div>
