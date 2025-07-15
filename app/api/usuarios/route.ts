@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         novoUsuario.id,
         null,
         novoUsuario,
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }
@@ -153,7 +153,7 @@ export async function PUT(request: NextRequest) {
         id,
         usuarioAnterior.rows[0],
         usuarioAtualizado,
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }
@@ -217,7 +217,7 @@ export async function DELETE(request: NextRequest) {
         id,
         usuarioAnterior.rows[0],
         result.rows[0],
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }

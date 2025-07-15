@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown'
 
-    const results = []
+    const results: any[] = []
 
     // Salvar cada configuração
     for (const [chave, valor] of Object.entries(body)) {

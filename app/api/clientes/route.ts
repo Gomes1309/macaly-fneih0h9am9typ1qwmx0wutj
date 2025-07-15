@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     console.log('📋 Listando clientes:', { search, tipo, status, grupo, page, limit })
 
     // Construir query dinâmica
-    let whereConditions = []
+    let whereConditions: string[] = []
     let params: any[] = []
     let paramIndex = 1
 
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
         novoCliente.id,
         null,
         novoCliente,
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }
@@ -253,7 +253,7 @@ export async function PUT(request: NextRequest) {
         id,
         clienteAnterior.rows[0],
         clienteAtualizado,
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }
@@ -313,7 +313,7 @@ export async function DELETE(request: NextRequest) {
         id,
         clienteAnterior.rows[0],
         null,
-        request.ip,
+        request.headers.get('x-forwarded-for') || 'unknown',
         request.headers.get('user-agent')
       )
     }
