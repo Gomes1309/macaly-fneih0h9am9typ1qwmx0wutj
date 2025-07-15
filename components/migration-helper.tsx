@@ -372,7 +372,7 @@ function MigrationHelper() {
             
             <Button 
               onClick={migrateData} 
-              disabled={isMigrating || (status && !status.success)}
+              disabled={isMigrating || (status?.success === false)}
               className="w-full"
             >
               {isMigrating ? (

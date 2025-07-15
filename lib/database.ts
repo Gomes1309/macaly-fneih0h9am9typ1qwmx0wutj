@@ -273,6 +273,41 @@ export async function createLog(usuario_id: string | null, acao: string, detalhe
   }
 }
 
+// Função para logs de atividade detalhados
+export async function logActivity(
+  usuario_id: string | null,
+  acao: string,
+  tabela: string,
+  registro_id: string,
+  dados_anteriores: any = null,
+  dados_novos: any = null,
+  ip?: string,
+  user_agent?: string | null
+) {
+  console.log('📋 Criando log de atividade:', acao, tabela, registro_id)
+  
+  if (!hasPostgresConnection()) {
+    console.warn('⚠️ Neon não configurado - log de atividade perdido')
+    return
+  }
+  
+  try {
+    await sql`
+      INSERT INTO logs (usuario_id, acao, detalhes, ip)
+      VALUES (${usuario_id}, ${acao}, ${JSON.stringify({
+        tabela,
+        registro_id,
+        dados_anteriores,
+        dados_novos,
+        user_agent
+      })}, ${ip})
+    `
+    console.log('✅ Log de atividade salvo no Neon')
+  } catch (error) {
+    console.error('❌ Erro ao salvar log de atividade no Neon:', error)
+  }
+}
+
 export async function getStats() {
   console.log('📊 Buscando estatísticas no Neon...')
   
